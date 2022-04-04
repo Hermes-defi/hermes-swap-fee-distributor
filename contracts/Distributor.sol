@@ -2,10 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 import "./interfaces/IUniswapV2Router01.sol";
 
-contract Distributor {
+contract Distributor is Ownable {
     mapping(address => address[]) public tokensWithPathForXHRMS;
     mapping(address => address[]) public tokensWithPathForSHRMS;
     address[] tokens;
@@ -13,6 +14,8 @@ contract Distributor {
     address public immutable vyperRouter;
     address public immutable xHRMSAddress;
     address public immutable sHRMSAddress;
+    event AddNewToken(address token, address[] xHRMSPath, address[] sHRMSPath);
+    event Convert(uint amount);
 
     constructor(address _vyperRouter, address _treasury, address _xHRMSAddress, address _sHRMSAddress) {
         vyperRouter = _vyperRouter;
@@ -28,6 +31,7 @@ contract Distributor {
         tokensWithPathForXHRMS[_token] = _xHRMSPath;
         tokensWithPathForSHRMS[_token] = _sHRMSPath;
         tokens.push(_token);
+        emit AddNewToken(_token, _xHRMSPath, _sHRMSPath);
     }
 
     function convert() external {
@@ -35,6 +39,7 @@ contract Distributor {
             uint balanceOfToken = ERC20(tokens[i]).balanceOf(address(this));
             if (balanceOfToken > 100 * 10**(ERC20(tokens[i]).decimals())) {
                 // transfer 50% to treasury
+                ERC20(tokens[i]).approve(vyperRouter, balanceOfToken);
                 uint treasuryAmount = balanceOfToken / 2;
                 IERC20(tokens[i]).transfer(treasury, treasuryAmount);
                 // swap 25% to xHRMS
@@ -56,7 +61,7 @@ contract Distributor {
                     sHRMSAddress,
                     block.timestamp + 10000
                 );
-
+                emit Convert(balanceOfToken);
             }
         }
     }
