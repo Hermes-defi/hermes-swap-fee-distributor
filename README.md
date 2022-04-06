@@ -1,46 +1,42 @@
-# Advanced Sample Hardhat Project
+# About
 
-This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
+This is a minimalist hardhat deployment enviroment specific for Harmony Network.
 
-The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
+There is 3 scripts in scripts folder used for deployment:
 
-Try running some of the following tasks:
+- 01_token_mc.js: deploy the token and MasterChef contract.
+- 02_factory.js: deploy the factory and save contract info in contracts.json
+- 03_router.js: deploy the router with linked factory.
 
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-npx hardhat help
-REPORT_GAS=true npx hardhat test
-npx hardhat coverage
-npx hardhat run scripts/deploy.ts
-TS_NODE_FILES=true npx ts-node scripts/deploy.ts
-npx eslint '**/*.{js,ts}'
-npx eslint '**/*.{js,ts}' --fix
-npx prettier '**/*.{json,sol,md}' --check
-npx prettier '**/*.{json,sol,md}' --write
-npx solhint 'contracts/**/*.sol'
-npx solhint 'contracts/**/*.sol' --fix
+# How to deploy
+
+This are instructions how to deploy the set of contracts.
+
+## Swap & Farming
+
+Do `yarn` to install modules dependencies in the enviroment.
+You need a .env file, here is a sample:
+
+```javascript
+PRIVATE_KEY=the private key to be used in deployment
+DEV=0x7cef2432A2690168Fb8eb7118A74d5f8EfF9Ef55
+MINT_AMOUNT=12000000000000000000000000
 ```
 
-# Etherscan verification
+After installed modules dependencies, do:
 
-To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
+### to deploy token and farming:
 
-In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Ropsten node URL (eg from Alchemy), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
-
-```shell
-hardhat run --network ropsten scripts/deploy.ts
+```bash
+npx hardhat run scripts/01_token_mc.js --network testnet
 ```
 
-Then, copy the deployment address and paste it in to replace `DEPLOYED_CONTRACT_ADDRESS` in this command:
+### to deploy the swap
 
-```shell
-npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS "Hello, Hardhat!"
-```
+- deploy the factory: `npx hardhat run scripts/02_factory.js --network testnet`
+- now the factory will print the current init code hash, change it in the file `contracts/hermesswap/libraries/HermesLibrary.sol`
+- now the factory and the hash has been saved to contracts.json
+- open the file `scripts/03_router.js` to check the weth address, you should add a if for one on your network.
+- deploy the router: `npx hardhat run scripts/03_router.js --network testnet`
 
-# Performance optimizations
-
-For faster runs of your tests and scripts, consider skipping ts-node's type checking by setting the environment variable `TS_NODE_TRANSPILE_ONLY` to `1` in hardhat's environment. For more details see [the documentation](https://hardhat.org/guides/typescript.html#performance-optimizations).
+At this point you should have a factory and a router linked.
