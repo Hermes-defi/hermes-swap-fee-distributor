@@ -75,17 +75,9 @@ describe("Distributor", function () {
         await this.main.deployed()
         await this.factory.setFeeTo(this.main.address);
 
-        await this.main.addNewToken(this.hermes.address,
-            [this.hermes.address, this.wone.address],
-            [this.hermes.address, this.wone.address]);
-
         await this.main.addNewToken(this.dai.address,
             [this.dai.address, this.wone.address],
             [this.dai.address, this.wone.address]);
-
-        await this.main.addNewToken(this.ust.address,
-            [this.ust.address, this.wone.address],
-            [this.ust.address, this.wone.address]);
 
         await this.hermes.approve(this.router.address, ethers.utils.parseUnits('9000000', 18).toString());
         await this.dai.approve(this.router.address, ethers.utils.parseUnits('9000000', 18).toString());
