@@ -15,6 +15,9 @@
     <script src="abi.js"></script>
     <script src="erc20-abi.js"></script>
     <script src="pair-abi.js"></script>
+    <script src="router-abi.js"></script>
+    <script src="mc-abi.js"></script>
+    <script src="factory-abi.js"></script>
     <script src="main.js"></script>
 
     <style>
@@ -30,6 +33,7 @@
             font-size: 12px;
             font-weight: bold;
             border-bottom:1px solid #ccc;
+            background-color: #eee;
         }
     </style>
 
@@ -42,6 +46,8 @@
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active"><a class="nav-link" href="#" id="blockNumber">0</a></li>
             <li class="nav-item active"><a class="nav-link" href="#" id="pairLength">0</a></li>
+            <li class="nav-item active"><a class="nav-link" href="#" id="lpBalanceOfUser">0</a></li>
+            <li class="nav-item active"><a class="nav-link" href="#" id="lpBalanceOfCtx">0</a></li>
             <li class="nav-item active">
                 <input class="nav-link" href type="button"
                        value="run" onclick="run()"/>
@@ -61,7 +67,28 @@
         <div>ust: <span id="ust"></span></div>
         <div>HRMS: <span id="HRMS"></span></div>
         <div>wone: <span id="wone"></span></div>
+        <div>hrms/wone lp: <span id="factoryAddress"></span></div>
     </fieldset>
+
+    <fieldset>
+        <legend>Swap</legend>
+
+        ONE <input type="text" id="addLiquidityONEAmount0" value="10" size="10"/>
+        TOKEN: <input type="text" id="addLiquidityONEAmount1" value="10" size="10"/>
+        token: <input type="text" id="addLiquidityONEToken" size="50" value=""/>
+        <input type="button" value="addLiquidityONE" onclick="addLiquidityONE()"/>
+        <input type="button" value="router approve" onclick="routerApprove()"/>
+        <span id="allowance">allowance 0</span>
+        <hr/>
+        pair0: <input type="text" id="swapPair0" size="50" value="" onblur="swapAllowance(this.value)"/>
+        pair1: <input type="text" id="swapPair1" size="50" value="" onblur="swapAllowance(this.value)"/>
+        <br/>
+        amount: <input type="text" id="swapAmount" value="1" size="10"/>
+        <input type="button" value="Swap" onclick="swap()"/>
+        <input type="button" value="Approve" onclick="swapApprove()"/>
+        <span id="swapAllowance"></span>
+    </fieldset>
+
 
     <fieldset>
         <legend>Add pair</legend>

@@ -10,7 +10,7 @@ async function main() {
     const _xHRMSAddress = '0x5888801091Ee32EEb4F96FD70A43F6a26CAf1aC7'
     const _sHRMSAddress = '0xAb728Cd1B558c6a755412E9D490b2140DC0e8F9A'
     const _ust = '0x33B465B61EBb322E6336437b2624F705a34a0Df0'
-    const _HRMS = '0x1170E2E177F544A3B2c11C23C8f2Fc3EE8bB45ee'
+    const _HRMS = '0x6D401016d0515F6d471952001b8e571364D666d6'
 
     const Distributor = await _Distributor.deploy(
       _router,
