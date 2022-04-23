@@ -1,4 +1,4 @@
-const CONTRACT = "0x23274A2c1334bC3d85DF2E14efCC3c8235ADb714";
+const CONTRACT = "0xb0e855b18f2c571bb4709157a97f35e631d750cb";
 const _factory = "0xC6cD3Af655E14a0030995C82a2a65f28fb3ff9f3";
 let web3, account, contract, router, factory, hrms, pairCtx;
 
@@ -39,17 +39,31 @@ async function initContract() {
   const allowance = await hrms.methods.allowance(account, router._address).call();
   $("#allowance").html(web3.utils.fromWei(allowance.toString()));
 
+
+
+  const treasure = await contract.methods.treasury().call();
+  const xHRMSAddress = await contract.methods.xHRMSAddress().call();
+  const sHRMSAddress = await contract.methods.sHRMSAddress().call();
+
+  const wone = await contract.methods.wone().call();
+  const ust = await contract.methods.ust().call();
+
+  $("#xHRMSAddress").html(xHRMSAddress);
+  $("#sHRMSAddress").html(sHRMSAddress);
+  $("#ust").html(ust);
+  $("#HRMS").html(hrmsToken);
+
+  const xHRMSAddressBalanceOfHRMS = await balanceOf(hrmsToken, xHRMSAddress);
+  const sHRMSAddressBalanceOfUst = await balanceOf(ust, sHRMSAddress);
+  const sHRMSAddressBalanceOfHRMS = await balanceOf(hrmsToken, sHRMSAddress);
+
+  $("#xHRMSAddressBalanceOfHRMS").html(xHRMSAddressBalanceOfHRMS);
+  $("#sHRMSAddressBalanceOfUst").html(sHRMSAddressBalanceOfUst);
+  $("#sHRMSAddressBalanceOfHRMS").html(sHRMSAddressBalanceOfHRMS);
   $("#blockNumber").html("Block: " + blockNumber);
   $("#ACCOUNT").html(account);
   $("#router").html(_router);
-  $("#treasury").html(await contract.methods.treasury().call());
-  $("#xHRMSAddress").html(await contract.methods.xHRMSAddress().call());
-  $("#sHRMSAddress").html(await contract.methods.sHRMSAddress().call());
-  $("#ust").html(await contract.methods.ust().call());
-  $("#HRMS").html(hrmsToken);
-
-  const wone = await contract.methods.wone().call();
-
+  $("#treasury").html(treasure);
   $("#addLiquidityONEToken").val(hrmsToken);
   $("#wone").html(wone);
 
@@ -69,6 +83,23 @@ async function initContract() {
   pairList(pairLength);
 
 
+  xhrmsConfigure(xHRMSAddress);
+  shrmsConfigure(sHRMSAddress, ust);
+
+}
+
+
+let xhmrsContract;
+async function xhrmsConfigure(address){
+  xhmrsContract = new web3.eth.Contract(abi_xhrms, address);
+  const xhrmsBalanceOfContract = await hrms.methods.balanceOf(address).call();
+  $('#xhrmsBalanceOfContract').html( web3.utils.fromWei(xhrmsBalanceOfContract) );
+
+  const xhrmsBalanceOfMyTokens = await hrms.methods.balanceOf(account).call();
+  $('#xhrmsBalanceOfMyTokens').html( web3.utils.fromWei(xhrmsBalanceOfMyTokens) );
+
+  const xhrmsBalanceOfUser = await xhmrsContract.methods.balanceOf(account).call();
+  $('#xhrmsBalanceOfUser').html( web3.utils.fromWei(xhrmsBalanceOfUser) );
 }
 
 async function pairList(pairLength) {
@@ -224,7 +255,8 @@ async function addLiquidityONE() {
 
 
 async function routerApprove() {
-  const address = $('#swapPair0').val();
+  const address = $('#addLiquidityONEToken').val();
+  console.log('approve', address);
   const token = new web3.eth.Contract(erc20_abi, address);
   await token.methods
     .approve(router._address, web3.utils.toWei("9999999999999999999999999999999999999"))
@@ -259,4 +291,116 @@ async function swap() {
     .swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn, "0", path, to, deadline)
     .send({ from: account });
   await initContract();
+}
+
+async function balanceOf(token, address) {
+  const ctx = new web3.eth.Contract(erc20_abi, token);
+  return await ctx.methods
+    .balanceOf(address)
+    .call();
+}
+
+
+
+async function xhrmsStake(_val){
+  const val = web3.utils.toWei(_val);
+  try {
+    await xhmrsContract.methods.enter(val).estimateGas({ from: account },
+      async function(error, gasAmount) {
+        if (! error) {
+          await xhmrsContract.methods.enter(val).send({ from: account });
+          await initContract();
+        }
+      });
+  } catch (e) {
+    alert(e.toString());
+  }
+}
+
+
+async function xhrmsUnStake(_val){
+  const val = web3.utils.toWei(_val);
+  try {
+    await xhmrsContract.methods.leave(val).estimateGas({ from: account },
+      async function(error, gasAmount) {
+        if (! error) {
+          await xhmrsContract.methods.leave(val).send({ from: account });
+          await initContract();
+        }
+      });
+  } catch (e) {
+    alert(e.toString());
+  }
+}
+
+
+async function xhrmsApprove(){
+  const val = web3.utils.toWei('999999999999999999999999999');
+  try {
+    await hrms.methods.approve(xhmrsContract._address,val).send({ from: account });
+    await initContract();
+  } catch (e) {
+    alert(e.toString());
+  }
+}
+
+async function shrmsApprove(){
+  const val = web3.utils.toWei('999999999999999999999999999');
+  try {
+    await hrms.methods.approve(shmrsContract._address,val).send({ from: account });
+    await initContract();
+  } catch (e) {
+    alert(e.toString());
+  }
+}
+
+
+let shmrsContract;
+async function shrmsConfigure(address, ust){
+  shmrsContract = new web3.eth.Contract(abi_shrms, address);
+  const shrmsBalanceOfContract = await hrms.methods.balanceOf(address).call();
+  $('#shrmsBalanceOfContract').html( web3.utils.fromWei(shrmsBalanceOfContract) );
+
+  const shrmsBalanceOfMyTokens = await hrms.methods.balanceOf(account).call();
+  $('#shrmsBalanceOfMyTokens').html( web3.utils.fromWei(shrmsBalanceOfMyTokens) );
+
+  const pendingReward = await shmrsContract.methods.pendingReward(account, ust).call();
+  $('#shrmsReward').html( web3.utils.fromWei(pendingReward) );
+
+  const shrmsBalanceOfUst = await balanceOf(ust, address);
+  $('#shrmsBalanceOfUst').html( web3.utils.fromWei(shrmsBalanceOfUst) );
+}
+
+
+
+
+async function shrmsStake(_val){
+  const val = web3.utils.toWei(_val);
+  try {
+    await shmrsContract.methods.deposit(val).estimateGas({ from: account },
+      async function(error, gasAmount) {
+        if (! error) {
+          await shmrsContract.methods.deposit(val).send({ from: account });
+          await initContract();
+        }
+      });
+  } catch (e) {
+    alert(e.toString());
+  }
+}
+
+
+async function shrmsUnStake(_val){
+  const val = web3.utils.toWei(_val);
+  try {
+    await shmrsContract.methods.withdraw(val).estimateGas({ from: account },
+      async function(error, gasAmount) {
+        if (! error) {
+          await shmrsContract.methods.withdraw(val).send({ from: account });
+          await initContract();
+        }
+      });
+  } catch (e) {
+    alert(e.toString());
+  }
 }
