@@ -93,13 +93,13 @@ let xhmrsContract;
 async function xhrmsConfigure(address){
   xhmrsContract = new web3.eth.Contract(abi_xhrms, address);
   const xhrmsBalanceOfContract = await hrms.methods.balanceOf(address).call();
-  $('#xhrmsBalanceOfContract').html( web3.utils.fromWei(xhrmsBalanceOfContract) );
+  $('#xhrmsBalanceOfContract').html( web3.utils.fromWei(xhrmsBalanceOfContract,'gwei') );
 
   const xhrmsBalanceOfMyTokens = await hrms.methods.balanceOf(account).call();
-  $('#xhrmsBalanceOfMyTokens').html( web3.utils.fromWei(xhrmsBalanceOfMyTokens) );
+  $('#xhrmsBalanceOfMyTokens').html( web3.utils.fromWei(xhrmsBalanceOfMyTokens, 'gwei') );
 
   const xhrmsBalanceOfUser = await xhmrsContract.methods.balanceOf(account).call();
-  $('#xhrmsBalanceOfUser').html( web3.utils.fromWei(xhrmsBalanceOfUser) );
+  $('#xhrmsBalanceOfUser').html( web3.utils.fromWei(xhrmsBalanceOfUser, 'gwei') );
 }
 
 async function pairList(pairLength) {
@@ -303,7 +303,7 @@ async function balanceOf(token, address) {
 
 
 async function xhrmsStake(_val){
-  const val = web3.utils.toWei(_val);
+  const val = web3.utils.toWei(_val, 'gwei');
   try {
     await xhmrsContract.methods.enter(val).estimateGas({ from: account },
       async function(error, gasAmount) {
@@ -319,7 +319,7 @@ async function xhrmsStake(_val){
 
 
 async function xhrmsUnStake(_val){
-  const val = web3.utils.toWei(_val);
+  const val = web3.utils.toWei(_val, 'gwei');
   try {
     await xhmrsContract.methods.leave(val).estimateGas({ from: account },
       async function(error, gasAmount) {
@@ -359,10 +359,10 @@ let shmrsContract;
 async function shrmsConfigure(address, ust){
   shmrsContract = new web3.eth.Contract(abi_shrms, address);
   const shrmsBalanceOfContract = await hrms.methods.balanceOf(address).call();
-  $('#shrmsBalanceOfContract').html( web3.utils.fromWei(shrmsBalanceOfContract) );
+  $('#shrmsBalanceOfContract').html( web3.utils.fromWei(shrmsBalanceOfContract,'gwei') );
 
   const shrmsBalanceOfMyTokens = await hrms.methods.balanceOf(account).call();
-  $('#shrmsBalanceOfMyTokens').html( web3.utils.fromWei(shrmsBalanceOfMyTokens) );
+  $('#shrmsBalanceOfMyTokens').html( web3.utils.fromWei(shrmsBalanceOfMyTokens,'gwei') );
 
   const pendingReward = await shmrsContract.methods.pendingReward(account, ust).call();
   $('#shrmsReward').html( web3.utils.fromWei(pendingReward) );
@@ -375,7 +375,7 @@ async function shrmsConfigure(address, ust){
 
 
 async function shrmsStake(_val){
-  const val = web3.utils.toWei(_val);
+  const val = web3.utils.toWei(_val, 'gwei');
   try {
     await shmrsContract.methods.deposit(val).estimateGas({ from: account },
       async function(error, gasAmount) {
@@ -391,7 +391,7 @@ async function shrmsStake(_val){
 
 
 async function shrmsUnStake(_val){
-  const val = web3.utils.toWei(_val);
+  const val = web3.utils.toWei(_val, 'gwei');
   try {
     await shmrsContract.methods.withdraw(val).estimateGas({ from: account },
       async function(error, gasAmount) {
