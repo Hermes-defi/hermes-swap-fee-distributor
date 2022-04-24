@@ -56,22 +56,22 @@ describe("Distributor", function () {
     })
 
     it("swap fees and check balances", async function () {
-        this.hermes = await this.ERC20MockDecimals.deploy(18)
-        await this.hermes.deployed()
-        await this.hermes.mint(this.dev.address, ethers.utils.parseUnits('9000000', 18).toString());
+        this.hrms = await this.ERC20MockDecimals.deploy(18, "hrms", "hrms")
+        await this.hrms.deployed()
+        await this.hrms.mint(this.dev.address, ethers.utils.parseUnits('9000000', 18).toString());
 
-        this.ust = await this.ERC20MockDecimals.deploy(18)
+        this.ust = await this.ERC20MockDecimals.deploy(18, "ust", "ust")
         await this.ust.deployed()
         await this.ust.mint(this.dev.address, ethers.utils.parseUnits('9000000', 18).toString());
 
-        this.dai = await this.ERC20MockDecimals.deploy(18)
+        this.dai = await this.ERC20MockDecimals.deploy(18, "dai", "dai")
         await this.dai.deployed()
         await this.dai.mint(this.dev.address, ethers.utils.parseUnits('9000000', 18).toString());
 
         this.main = await this.Distributor.deploy(
             this.router.address, this.treasure.address,
             this.xHRMSAddress.address, this.sHRMSAddress.address,
-            this.ust.address, this.hermes.address);
+            this.ust.address, this.hrms.address);
         await this.main.deployed()
         await this.factory.setFeeTo(this.main.address);
 
@@ -79,22 +79,26 @@ describe("Distributor", function () {
             [this.dai.address, this.wone.address],
             [this.dai.address, this.wone.address]);
 
-        await this.hermes.approve(this.router.address, ethers.utils.parseUnits('9000000', 18).toString());
+        await this.main.addNewToken(this.hrms.address,
+          [this.hrms.address, this.wone.address],
+          [this.hrms.address, this.wone.address]);
+
+        await this.hrms.approve(this.router.address, ethers.utils.parseUnits('9000000', 18).toString());
         await this.dai.approve(this.router.address, ethers.utils.parseUnits('9000000', 18).toString());
         await this.ust.approve(this.router.address, ethers.utils.parseUnits('9000000', 18).toString());
 
         const amount = ethers.utils.parseUnits('1000000', 18).toString();
         const amount1000 = ethers.utils.parseUnits('1000', 18).toString();
         this.router.addLiquidity(
-            this.hermes.address, this.dai.address, amount, amount,
+            this.hrms.address, this.dai.address, amount, amount,
             '0', '0', this.dev.address, '9647704139')
 
         this.router.addLiquidity(
-            this.hermes.address, this.ust.address, amount, amount,
+            this.hrms.address, this.ust.address, amount, amount,
             '0', '0', this.dev.address, '9647704139')
 
         this.router.addLiquidityONE(
-            this.hermes.address,
+            this.hrms.address,
             amount, '0', '0', this.dev.address, '9647704139', {value: amount1000})
 
         this.router.addLiquidityONE(
@@ -106,8 +110,8 @@ describe("Distributor", function () {
             amount, '0', '0', this.dev.address, '9647704139', {value: amount1000})
 
         const amount1 = ethers.utils.parseUnits('10000', 18).toString();
-        const path1 = [this.hermes.address, this.dai.address];
-        const path2 = [this.hermes.address, this.wone.address];
+        const path1 = [this.hrms.address, this.dai.address];
+        const path2 = [this.hrms.address, this.wone.address];
         const path3 = [this.dai.address, this.wone.address];
         const path4 = [this.ust.address, this.wone.address];
 
@@ -119,12 +123,12 @@ describe("Distributor", function () {
         await this.router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amount1, '0', path4, this.dev.address, '9647704139');
 
         this.router.addLiquidity(
-            this.hermes.address, this.dai.address,
+            this.hrms.address, this.dai.address,
             amount,
             amount,
             '0', '0', this.dev.address, '9647704139')
 
-        this.pair_hrms_dai_addr = await this.factory.getPair(this.hermes.address, this.dai.address);
+        this.pair_hrms_dai_addr = await this.factory.getPair(this.hrms.address, this.dai.address);
 
         // console.log('this.pair_hrms_dai_addr', this.pair_hrms_dai_addr);
 
@@ -136,7 +140,7 @@ describe("Distributor", function () {
 
         await this.main.run();
 
-        const xHRMSBalance = (await this.hermes.balanceOf(this.xHRMSAddress.address)).toString();
+        const xHRMSBalance = (await this.hrms.balanceOf(this.xHRMSAddress.address)).toString();
         await expect(fromWei(xHRMSBalance)).to.be.eq("3.134072770337029409") // HRMS
 
         const sHRMSBalance = (await this.ust.balanceOf(this.sHRMSAddress.address)).toString();

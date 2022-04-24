@@ -1,4 +1,4 @@
-const CONTRACT = "0xb0e855b18f2c571bb4709157a97f35e631d750cb";
+const CONTRACT = "0x5C70f5bB572fC43C7d57E8a442DF7cE0BdA1a7aF";
 const _factory = "0xC6cD3Af655E14a0030995C82a2a65f28fb3ff9f3";
 let web3, account, contract, router, factory, hrms, pairCtx;
 
@@ -40,7 +40,6 @@ async function initContract() {
   $("#allowance").html(web3.utils.fromWei(allowance.toString()));
 
 
-
   const treasure = await contract.methods.treasury().call();
   const xHRMSAddress = await contract.methods.xHRMSAddress().call();
   const sHRMSAddress = await contract.methods.sHRMSAddress().call();
@@ -78,8 +77,12 @@ async function initContract() {
 
   const pairLength = await contract.methods.pairLength().call();
   $("#pairLength").html(pairLength);
+
   $("#lpBalanceOfUser").html(web3.utils.fromWei(lpBalanceOfUser));
+
   $("#lpBalanceOfCtx").html(web3.utils.fromWei(lpBalanceOfCtx));
+
+
   pairList(pairLength);
 
 
@@ -110,22 +113,8 @@ async function pairList(pairLength) {
 
     $("#PairInfo").html(html);
     const pair = new web3.eth.Contract(pair_abi, pairAddress);
-
     const balance = await pair.methods.balanceOf(CONTRACT).call();
-    const token0 = await pair.methods.token0().call();
-    const token1 = await pair.methods.token1().call();
-
-    const ctxToken0 = new web3.eth.Contract(erc20_abi, token0);
-
-    const ctxToken1 = new web3.eth.Contract(erc20_abi, token1);
-
-    const token0Symbol = await ctxToken0.methods.symbol().call();
-    const token1Symbol = await ctxToken1.methods.symbol().call();
-
     html += `LP: ${i}: ${pairAddress} = ${balance}<br/>`;
-    html += `LP Info:<br/>`;
-    html += `- ${token0Symbol}: ${token0}<br/>- ${token1Symbol}: ${token1}<br/>`;
-
     const pairPaths = await contract.methods.pairPaths(pairAddress).call();
     html += `path:<br/>`;
     html += ` - x ${JSON.stringify(pairPaths[0])}<br/>`;

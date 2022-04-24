@@ -13,7 +13,7 @@ contract ERC20MockDecimals is ERC20, Ownable {
 
     /// @dev Constructor
     /// @param _decimals The number of decimals for this token
-    constructor(uint8 _decimals) public ERC20("ERC20Mock", "ERC20M") {
+    constructor(uint8 _decimals, string memory _name, string memory _symbol) public ERC20(_name, _symbol) {
         decimalsOverride = _decimals;
     }
 

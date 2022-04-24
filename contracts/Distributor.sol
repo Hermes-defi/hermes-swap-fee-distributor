@@ -1,4 +1,4 @@
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
@@ -793,7 +793,7 @@ contract Distributor is Ownable {
         for (uint i = 0; i < _sHRMSPath.length; i ++) {
             IERC20Hermes(_sHRMSPath[i]).balanceOf(address(this));
         }
-        IHermesPair(_token).token0();
+        IHermesPair(_token).balanceOf(address(this));
         allTokens.add(_token);
         tokensWithPathForXHRMS[_token] = _xHRMSPath;
         tokensWithPathForSHRMS[_token] = _sHRMSPath;
@@ -815,76 +815,80 @@ contract Distributor is Ownable {
             IERC20Hermes token0 = IERC20Hermes(pair.token0());
             IERC20Hermes token1 = IERC20Hermes(pair.token1());
             pair.approve(address(routerCtx), balanceOfLp);
-            routerCtx.removeLiquidity(pair.token1(), pair.token0(), balanceOfLp,
+            (uint256 amountA, uint256 amountB) = routerCtx
+                .removeLiquidity(pair.token1(), pair.token0(), balanceOfLp,
                 0, 0, address(this), block.timestamp + 60);
-            uint balance0 = token0.balanceOf(address(this));
-            uint balance1 = token1.balanceOf(address(this));
-            (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) = pair.getReserves();
-//            console.log(' token0', address(token0), balance0);
-//            console.log('  reserve0', reserve0);
-//            console.log(' token1', address(token1), balance1);
-//            console.log('  reserve1', reserve1);
+            console.log('break0: ', token0.symbol(), amountA);
+            console.log('break1: ', token1.symbol(), amountB);
         }
     }
 
+    event err(address id, uint err, uint arg1, uint arg2);
     function convertAll() public {
         uint length = factoryCtx.allPairsLength();
         for (uint i = 0; i < length; i ++) {
             IHermesPair pair = IHermesPair(factoryCtx.allPairs(i));
+            address id = address(pair);
             IERC20Hermes token0 = IERC20Hermes(pair.token0());
             IERC20Hermes token1 = IERC20Hermes(pair.token1());
-            uint balance0 = token0.balanceOf(address(this));
-            uint balance1 = token1.balanceOf(address(this));
-            (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) = pair.getReserves();
-//            console.log('----------------------------------------------------------------------');
-//            console.log(' l/token0', address(token0), balance0);
-//            console.log('  l/reserve0', reserve0);
-//            console.log(' l/token1', address(token1), balance1);
-//            console.log('  l/reserve1', reserve1);
-            convert(token0);
-            convert(token1);
+
+            uint balance = token0.balanceOf(address(this));
+            if (balance > 1000000 && address(token0) != wone ) {
+                // insufficient balance
+                emit err(id, 1, balance, 0);
+                console.log('  // balance', token0.symbol(), balance);
+                convert(token0);
+            }
+
+            balance = token1.balanceOf(address(this));
+            if (balance > 1000000 && address(token0) != wone ) {
+                // insufficient balance
+                emit err(id, 2, balance, 0);
+                console.log('  // balance', token1.symbol(), balance);
+                convert(token1);
+            }
         }
     }
 
     function convert(IERC20Hermes token) public {
+        address id = address(token);
 
-        address tokenAddress = address(token);
-        if (tokenAddress == wone) {
-            //console.log('  // is wone token', token.symbol());
+        if (id == wone) {
+            // console.log('\t// is wone token', token.symbol());
             // no need to apply conversion for fee token
+            emit err(id, 4, token.balanceOf(address(this)), 0);
             return;
         }
-        if ( allTokens.contains(tokenAddress) == false ) {
+
+        if ( allTokens.contains(id) == false ) {
             // token has not path
-            //console.log('  // token has not path', token.symbol());
+            console.log('\t// token has not path', token.symbol());
+            emit err(id, 3, 0, 0);
             return;
         }
-
-        uint balanceOfToken = token.balanceOf(address(this));
-        if (balanceOfToken < 1 * 10 ** (token.decimals())) {
-            // insufficient balance
-            //console.log('  // insufficient balance', token.symbol());
-            return;
-        }
-
 
         //
-        IERC20Hermes(tokensWithPathForXHRMS[tokenAddress][0])
-        .approve(address(routerCtx), balanceOfToken);
+        uint balance = token.balanceOf(address(this));
+        IERC20Hermes(tokensWithPathForXHRMS[id][0])
+        .approve(address(routerCtx), balance);
 
-        routerCtx.swapExactTokensForTokens(
-            balanceOfToken,
+        uint256[] memory amounts = routerCtx.swapExactTokensForTokens(
+            balance,
             0,
-            tokensWithPathForXHRMS[tokenAddress],
+            tokensWithPathForXHRMS[id],
             address(this),
             block.timestamp + 10000
         );
-        //console.log(' OK, swaped', tokenAddress);
+        console.log('\tOK, swaped', id, amounts[0], amounts[1] );
+        console.log('\t    wone', IERC20Hermes(wone).balanceOf(address(this)) );
+        emit err(id, 5, amounts[0], amounts[1]);
     }
 
     function splitAndSend() public {
         IERC20Hermes token = IERC20Hermes(wone);
-
+        if( token.balanceOf(address(this)) < 1000000 ){
+            return;
+        }
         uint treasureBalance = token.balanceOf(address(this))/2;
         uint xHRMSBalance = token.balanceOf(address(this))/4;
         uint sHRMSBalance = token.balanceOf(address(this))/4;
