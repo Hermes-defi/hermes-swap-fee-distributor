@@ -804,6 +804,10 @@ contract Distributor is Ownable {
         convertAll();
         splitAndSend();
     }
+
+    // emited when we found any pair in the factory that has liquidity
+    event liquidityFound(uint index, address token0, address token1, uint amount0, uint amount1);
+
     function breakLp() public {
         uint length = factoryCtx.allPairsLength();
         //console.log('length', length);
@@ -818,12 +822,12 @@ contract Distributor is Ownable {
             (uint256 amountA, uint256 amountB) = routerCtx
                 .removeLiquidity(pair.token1(), pair.token0(), balanceOfLp,
                 0, 0, address(this), block.timestamp + 60);
-            console.log('break0: ', token0.symbol(), amountA);
-            console.log('break1: ', token1.symbol(), amountB);
+            emit liquidityFound(i, pair.token0(), pair.token1(), amountA, amountB);
+            //console.log('break0: ', token0.symbol(), amountA);
+            //console.log('break1: ', token1.symbol(), amountB);
         }
     }
 
-    event err(address id, uint err, uint arg1, uint arg2);
     function convertAll() public {
         uint length = factoryCtx.allPairsLength();
         for (uint i = 0; i < length; i ++) {
@@ -832,42 +836,31 @@ contract Distributor is Ownable {
             IERC20Hermes token0 = IERC20Hermes(pair.token0());
             IERC20Hermes token1 = IERC20Hermes(pair.token1());
 
-            uint balance = token0.balanceOf(address(this));
-            if (balance > 1000000 && address(token0) != wone ) {
-                // insufficient balance
-                emit err(id, 1, balance, 0);
-                console.log('  // balance', token0.symbol(), balance);
+            uint balance0 = token0.balanceOf(address(this));
+            uint balance1 = token1.balanceOf(address(this));
+
+            if (balance0 > 1000000 && address(token0) != wone ) {
                 convert(token0);
             }
 
-            balance = token1.balanceOf(address(this));
-            if (balance > 1000000 && address(token0) != wone ) {
-                // insufficient balance
-                emit err(id, 2, balance, 0);
-                console.log('  // balance', token1.symbol(), balance);
+            if (balance1 > 1000000 && address(token1) != wone ) {
                 convert(token1);
             }
         }
     }
 
+    event convertTo(address convertFrom, address[] path, uint256[] amounts);
     function convert(IERC20Hermes token) public {
         address id = address(token);
 
         if (id == wone) {
-            // console.log('\t// is wone token', token.symbol());
-            // no need to apply conversion for fee token
-            emit err(id, 4, token.balanceOf(address(this)), 0);
             return;
         }
 
         if ( allTokens.contains(id) == false ) {
-            // token has not path
-            console.log('\t// token has not path', token.symbol());
-            emit err(id, 3, 0, 0);
             return;
         }
 
-        //
         uint balance = token.balanceOf(address(this));
         IERC20Hermes(tokensWithPathForXHRMS[id][0])
         .approve(address(routerCtx), balance);
@@ -879,23 +872,18 @@ contract Distributor is Ownable {
             address(this),
             block.timestamp + 10000
         );
-        console.log('\tOK, swaped', id, amounts[0], amounts[1] );
-        console.log('\t    wone', IERC20Hermes(wone).balanceOf(address(this)) );
-        emit err(id, 5, amounts[0], amounts[1]);
+        emit convertTo(id, tokensWithPathForXHRMS[id], amounts);
     }
 
+    event splitAndSendInfo(uint woneBalance, uint treasureBalance, uint xHRMSBalance, uint sHRMSBalance, uint ust, uint hrms);
     function splitAndSend() public {
         IERC20Hermes token = IERC20Hermes(wone);
-        if( token.balanceOf(address(this)) < 1000000 ){
-            return;
-        }
+        uint woneBalance = token.balanceOf(address(this));
+        if( woneBalance  < 1000000 ) return;
         uint treasureBalance = token.balanceOf(address(this))/2;
         uint xHRMSBalance = token.balanceOf(address(this))/4;
         uint sHRMSBalance = token.balanceOf(address(this))/4;
-        //console.log('balances', treasureBalance, xHRMSBalance, sHRMSBalance);
-
         token.transfer(treasury, treasureBalance);
-
         address[] memory path1 = new address[](2);
         path1[0] = wone;
         path1[1] = ust;
@@ -903,10 +891,6 @@ contract Distributor is Ownable {
         uint256[] memory amountsShrms = routerCtx.swapExactTokensForTokens(
             sHRMSBalance, 0, path1, sHRMSAddress, block.timestamp + 10000
         );
-//        for( uint i = 0 ; i < amountsShrms.length ; i ++ ){
-//            console.log('- amountsShrms', amountsShrms[i]);
-//        }
-
         address[] memory path2 = new address[](2);
         path2[0] = wone;
         path2[1] = HRMS;
@@ -914,10 +898,7 @@ contract Distributor is Ownable {
         uint256[] memory amountsXhrms = routerCtx.swapExactTokensForTokens(
             sHRMSBalance, 0, path2, xHRMSAddress, block.timestamp + 10000
         );
-//        for( uint i = 0 ; i < amountsXhrms.length ; i ++ ){
-//            console.log('- amountsXhrms', amountsXhrms[i]);
-//        }
-
+        emit splitAndSendInfo(woneBalance, treasureBalance, xHRMSBalance, sHRMSBalance, amountsShrms[1], amountsXhrms[1]);
     }
 
 }
