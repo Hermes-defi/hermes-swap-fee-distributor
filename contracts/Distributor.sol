@@ -822,7 +822,10 @@ contract Distributor is Ownable {
         convertAll();
         splitAndSend();
     }
-
+    function breakLpMinAmount(uint _val) public callers {
+        minLPAmount = _val;
+    }
+    uint public minLPAmount = 1000000;
     function breakLp() public callers {
         uint length = factoryCtx.allPairsLength();
         //console.log('length', length);
@@ -830,7 +833,9 @@ contract Distributor is Ownable {
             IHermesPair pair = IHermesPair(factoryCtx.allPairs(i));
             uint balanceOfLp = pair.balanceOf(address(this));
             //console.log('pair', balanceOfLp, address(pair));
-            if (balanceOfLp == 0) continue;
+            if (balanceOfLp <= minLPAmount)
+                // execution reverted: Hermes: INSUFFICIENT_LIQUIDITY_BURNED
+                continue;
             IERC20Hermes token0 = IERC20Hermes(pair.token0());
             IERC20Hermes token1 = IERC20Hermes(pair.token1());
             pair.approve(address(routerCtx), balanceOfLp);
