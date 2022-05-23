@@ -1,4 +1,4 @@
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
@@ -728,6 +728,7 @@ interface IERC20Hermes {
 
 contract Distributor is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
+    mapping(address => bool) public _callers;
     mapping(address => address[]) public tokensWithPathForXHRMS;
     mapping(address => address[]) public tokensWithPathForSHRMS;
     address public wone;
@@ -740,6 +741,11 @@ contract Distributor is Ownable {
     IHermesRouter02 public routerCtx;
     IHermesFactory public factoryCtx;
     EnumerableSet.AddressSet private allTokens;
+
+    // emited when we found any pair in the factory that has liquidity
+    event liquidityFound(uint index, address token0, address token1, uint amount0, uint amount1);
+    event onConvertTo(address convertFrom, address[] path, uint256[] amounts);
+    event splitAndSendInfo(uint woneBalance, uint treasureBalance, uint xHRMSBalance, uint sHRMSBalance, uint ust, uint hrms);
 
     constructor(
         address _router,
@@ -763,6 +769,18 @@ contract Distributor is Ownable {
 
         wone = routerCtx.WONE();
 
+        // add deployer as caller
+        _callers[msg.sender] = true;
+        // add this contract
+        _callers[address(this)] = true;
+
+    }
+    modifier callers() {
+        require( _callers[msg.sender], "not a caller");
+        _;
+    }
+    function setCaller(address caller, bool status) public onlyOwner {
+        _callers[caller] = status;
     }
     function pairLength() public view returns(uint){
         return allTokens.length();
@@ -799,16 +817,13 @@ contract Distributor is Ownable {
         tokensWithPathForSHRMS[_token] = _sHRMSPath;
 
     }
-    function run() public {
+    function run() public callers {
         breakLp();
         convertAll();
         splitAndSend();
     }
 
-    // emited when we found any pair in the factory that has liquidity
-    event liquidityFound(uint index, address token0, address token1, uint amount0, uint amount1);
-
-    function breakLp() public {
+    function breakLp() public callers {
         uint length = factoryCtx.allPairsLength();
         //console.log('length', length);
         for (uint i = 0; i < length; i ++) {
@@ -828,7 +843,7 @@ contract Distributor is Ownable {
         }
     }
 
-    function convertAll() public {
+    function convertAll() public callers {
         uint length = factoryCtx.allPairsLength();
         for (uint i = 0; i < length; i ++) {
             IHermesPair pair = IHermesPair(factoryCtx.allPairs(i));
@@ -849,8 +864,7 @@ contract Distributor is Ownable {
         }
     }
 
-    event convertTo(address convertFrom, address[] path, uint256[] amounts);
-    function convert(IERC20Hermes token) public {
+    function convert(IERC20Hermes token) public callers {
         address id = address(token);
 
         if (id == wone) {
@@ -872,11 +886,10 @@ contract Distributor is Ownable {
             address(this),
             block.timestamp + 10000
         );
-        emit convertTo(id, tokensWithPathForXHRMS[id], amounts);
+        emit onConvertTo(id, tokensWithPathForXHRMS[id], amounts);
     }
 
-    event splitAndSendInfo(uint woneBalance, uint treasureBalance, uint xHRMSBalance, uint sHRMSBalance, uint ust, uint hrms);
-    function splitAndSend() public {
+    function splitAndSend() public callers {
         IERC20Hermes token = IERC20Hermes(wone);
         uint woneBalance = token.balanceOf(address(this));
         if( woneBalance  < 1000000 ) return;
