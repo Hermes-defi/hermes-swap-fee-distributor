@@ -1,5 +1,5 @@
-const CONTRACT = "0x669aBa76A65c9A538760Ce8A66171e49F10BA1Ff";
-const _factory = "0xC6cD3Af655E14a0030995C82a2a65f28fb3ff9f3";
+const CONTRACT = "0xbb3AcD68E6a9946eF93f2495C03ac2068e58d39e";
+const _factory = "0x7cbe97cBD85C7868397Db30979d6c81A9b7E4037";
 let web3, account, contract, router, factory, hrms, pairCtx;
 
 async function accountLoad() {
