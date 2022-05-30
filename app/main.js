@@ -1,5 +1,5 @@
-const CONTRACT = "0xbb3AcD68E6a9946eF93f2495C03ac2068e58d39e";
-const _factory = "0x7cbe97cBD85C7868397Db30979d6c81A9b7E4037";
+const CONTRACT = "0xc2747780066aAA606DC19f27b737d5E86DA14144";
+const _factory = "0xfE5e54A8E28534fFfe89b9cfDDfd18d3a90B42cA";
 let web3, account, contract, router, factory, hrms, pairCtx;
 
 async function accountLoad() {
@@ -23,11 +23,6 @@ async function main() {
 }
 
 async function initContract() {
-  // contract = new web3.eth.Contract(mc_abi, '0x4557a506d0eeba51ca2e884ad19dd299037f9d35');
-  // const r1 = await contract.methods.poolInfo('0').call();
-  // console.log('r1', r1);
-  // const r = await contract.methods.pendingTokens('0', '0xb63F27E0E5A4c463e056DC835821f0BEE339406A').call();
-  // console.log('r', r);
 
   contract = new web3.eth.Contract(abi, CONTRACT);
   const blockNumber = await web3.eth.getBlockNumber();
