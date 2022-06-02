@@ -7,7 +7,6 @@ types
 
 #Hardhat files
 cache
-artifacts
 .idea
 
 #VSCODE

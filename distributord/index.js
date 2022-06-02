@@ -5,7 +5,7 @@ process.on('uncaughtException', function (err) {
 });
 process.setMaxListeners(0);
 require('events').EventEmitter.defaultMaxListeners = 0;
-require('dotenv').config({path: '../.env'});
+require('dotenv').config({path: '.env'});
 
 const fs = require("fs")
 const Web3 = require("web3")
