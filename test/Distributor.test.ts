@@ -64,12 +64,22 @@ describe("Distributor", function () {
         await this.dai.mint(this.dev.address, ethers.utils.parseUnits('9000000', 18).toString());
 
         this.main = await this.Distributor.deploy(
+<<<<<<< HEAD
+          this.router.address, this.treasure.address,
+          this.xHRMSAddress.address, this.hrms.address);
+
+=======
             this.router.address, this.treasure.address, this.xHRMSAddress.address);
+>>>>>>> 337d7b161d08cf266ba2dd99026f9025d37f317c
         await this.main.deployed()
         await this.factory.setFeeTo(this.main.address);
 
         await this.main.addNewToken(this.dai.address,
+<<<<<<< HEAD
+          [this.dai.address, this.wone.address]);
+=======
             [this.dai.address, this.wone.address]);
+>>>>>>> 337d7b161d08cf266ba2dd99026f9025d37f317c
 
         await this.main.addNewToken(this.hrms.address,
           [this.hrms.address, this.wone.address]);
@@ -80,20 +90,21 @@ describe("Distributor", function () {
         const amount = ethers.utils.parseUnits('1000000', 18).toString();
         const amount1000 = ethers.utils.parseUnits('1000', 18).toString();
         this.router.addLiquidity(
-            this.hrms.address, this.dai.address, amount, amount,
-            '0', '0', this.dev.address, '9647704139')
-
-        this.router.addLiquidity(
-            this.hrms.address, this.ust.address, amount, amount,
-            '0', '0', this.dev.address, '9647704139')
+          this.hrms.address, this.dai.address, amount, amount,
+          '0', '0', this.dev.address, '9647704139')
 
         this.router.addLiquidityONE(
-            this.hrms.address,
-            amount, '0', '0', this.dev.address, '9647704139', {value: amount1000})
+          this.hrms.address,
+          amount, '0', '0', this.dev.address, '9647704139', {value: amount1000})
 
         this.router.addLiquidityONE(
+<<<<<<< HEAD
+          this.dai.address,
+          amount, '0', '0', this.dev.address, '9647704139', {value: amount1000})
+=======
             this.dai.address,
             amount, '0', '0', this.dev.address, '9647704139', {value: amount1000})
+>>>>>>> 337d7b161d08cf266ba2dd99026f9025d37f317c
 
         const amount1 = ethers.utils.parseUnits('10000', 18).toString();
         const path1 = [this.hrms.address, this.dai.address];
@@ -108,10 +119,10 @@ describe("Distributor", function () {
 
 
         this.router.addLiquidity(
-            this.hrms.address, this.dai.address,
-            amount,
-            amount,
-            '0', '0', this.dev.address, '9647704139')
+          this.hrms.address, this.dai.address,
+          amount,
+          amount,
+          '0', '0', this.dev.address, '9647704139')
 
         this.pair_hrms_dai_addr = await this.factory.getPair(this.hrms.address, this.dai.address);
 
@@ -124,7 +135,11 @@ describe("Distributor", function () {
         await this.main.run();
 
         const xHRMSBalance = (await this.hrms.balanceOf(this.xHRMSAddress.address)).toString();
+<<<<<<< HEAD
+        await expect(fromWei(xHRMSBalance)).to.be.eq("6.268126090538383771") // HRMS
+=======
         await expect(fromWei(xHRMSBalance)).to.be.eq("3.134072770337029409") // HRMS
+>>>>>>> 337d7b161d08cf266ba2dd99026f9025d37f317c
 
         const treasureBalance = (await this.wone.balanceOf(this.treasure.address)).toString();
         await expect(fromWei(treasureBalance)).to.be.eq("0.006163250774984714") // WONE
