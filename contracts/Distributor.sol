@@ -730,14 +730,11 @@ contract Distributor is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
     mapping(address => bool) public _callers;
     mapping(address => address[]) public tokensWithPathForXHRMS;
-    mapping(address => address[]) public tokensWithPathForSHRMS;
     address public wone;
-    address public ust;
     address public HRMS;
     address public treasury;
     address public router;
     address public xHRMSAddress;
-    address public sHRMSAddress;
     IHermesRouter02 public routerCtx;
     IHermesFactory public factoryCtx;
     EnumerableSet.AddressSet private allTokens;
@@ -751,16 +748,11 @@ contract Distributor is Ownable {
         address _router,
         address _treasury,
         address _xHRMSAddress,
-        address _sHRMSAddress,
-        address _ust,
         address _HRMS)
     {
         router = _router;
         treasury = _treasury;
         xHRMSAddress = _xHRMSAddress;
-        sHRMSAddress = _sHRMSAddress;
-
-        ust = _ust;
         HRMS = _HRMS;
 
         routerCtx = IHermesRouter02(_router);
@@ -794,28 +786,23 @@ contract Distributor is Ownable {
     function pairRemove(address pair) public onlyOwner {
         allTokens.remove(pair);
     }
-    function pairPaths(address pair) public view returns(address[] memory, address[] memory) {
-        return( tokensWithPathForXHRMS[pair], tokensWithPathForSHRMS[pair] );
+    function pairPaths(address pair) public view returns(address[] memory) {
+        return( tokensWithPathForXHRMS[pair]);
     }
-    function addNewToken(address _token, address[] memory _xHRMSPath, address[] memory _sHRMSPath) external onlyOwner {
+    function addNewToken(address _token, address[] memory _xHRMSPath) external onlyOwner {
         require(allTokens.contains(_token)==false  , "Token is already registered");
-        _addNewToken(_token, _xHRMSPath, _sHRMSPath);
+        _addNewToken(_token, _xHRMSPath);
     }
-    function setToken(address _token, address[] memory _xHRMSPath, address[] memory _sHRMSPath) external onlyOwner {
-        _addNewToken(_token, _xHRMSPath, _sHRMSPath);
+    function setToken(address _token, address[] memory _xHRMSPath) external onlyOwner {
+        _addNewToken(_token, _xHRMSPath);
     }
-    function _addNewToken(address _token, address[] memory _xHRMSPath, address[] memory _sHRMSPath) internal {
+    function _addNewToken(address _token, address[] memory _xHRMSPath) internal {
         for (uint i = 0; i < _xHRMSPath.length; i ++) {
             IERC20Hermes(_xHRMSPath[i]).balanceOf(address(this));
-        }
-        for (uint i = 0; i < _sHRMSPath.length; i ++) {
-            IERC20Hermes(_sHRMSPath[i]).balanceOf(address(this));
         }
         IHermesPair(_token).balanceOf(address(this));
         allTokens.add(_token);
         tokensWithPathForXHRMS[_token] = _xHRMSPath;
-        tokensWithPathForSHRMS[_token] = _sHRMSPath;
-
     }
     function run() public callers {
         breakLp();
@@ -897,26 +884,20 @@ contract Distributor is Ownable {
     function splitAndSend() public callers {
         IERC20Hermes token = IERC20Hermes(wone);
         uint woneBalance = token.balanceOf(address(this));
-        if( woneBalance  < 1000000 ) return;
-        uint treasureBalance = token.balanceOf(address(this))/2;
-        uint xHRMSBalance = token.balanceOf(address(this))/4;
-        uint sHRMSBalance = token.balanceOf(address(this))/4;
-        token.transfer(treasury, treasureBalance);
-        address[] memory path1 = new address[](2);
-        path1[0] = wone;
-        path1[1] = ust;
-        IERC20Hermes(wone).approve(address(routerCtx), sHRMSBalance);
-        uint256[] memory amountsShrms = routerCtx.swapExactTokensForTokens(
-            sHRMSBalance, 0, path1, sHRMSAddress, block.timestamp + 10000
-        );
+        if( woneBalance  < 1 ether ){
+            return;
+        }
+        uint amount = token.balanceOf(address(this))/2;
+        token.transfer(treasury, amount);
+
         address[] memory path2 = new address[](2);
         path2[0] = wone;
         path2[1] = HRMS;
-        IERC20Hermes(wone).approve(address(routerCtx), sHRMSBalance);
+        IERC20Hermes(wone).approve(address(routerCtx), amount);
         uint256[] memory amountsXhrms = routerCtx.swapExactTokensForTokens(
-            sHRMSBalance, 0, path2, xHRMSAddress, block.timestamp + 10000
+            amount, 0, path2, xHRMSAddress, block.timestamp + 10000
         );
-        emit splitAndSendInfo(woneBalance, treasureBalance, xHRMSBalance, sHRMSBalance, amountsShrms[1], amountsXhrms[1]);
+        emit splitAndSendInfo(woneBalance, amount, amount, 0, amountsShrms[1], amountsXhrms[1]);
     }
 
 }
