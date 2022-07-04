@@ -1,4 +1,4 @@
-const CONTRACT = "0x669C381CFCE6473Ceb4C8a95e2A9a3584297396C";
+const CONTRACT = "0xE8CDC2FDe613184952e90114a4e61C505B0b4B94";
 const _factory = "0xfE5e54A8E28534fFfe89b9cfDDfd18d3a90B42cA";
 let web3, account, contract, router, factory, hrms, pairCtx;
 
