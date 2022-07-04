@@ -1,4 +1,4 @@
-const CONTRACT = "0xc2747780066aAA606DC19f27b737d5E86DA14144";
+const CONTRACT = "0x8b2DD6D99c424a6D007d2E4B9E0074D5B7812550";
 const _factory = "0xfE5e54A8E28534fFfe89b9cfDDfd18d3a90B42cA";
 let web3, account, contract, router, factory, hrms, pairCtx;
 
@@ -24,11 +24,16 @@ async function main() {
 
 async function initContract() {
 
-  contract = new web3.eth.Contract(abi, CONTRACT);
+  contract = new web3.eth.Contract(distributor_abi, CONTRACT);
+
   const blockNumber = await web3.eth.getBlockNumber();
+
   const _router = await contract.methods.router().call();
+
   const hrmsToken = await contract.methods.HRMS().call();
   router = new web3.eth.Contract(router_abi, _router);
+
+
 
   hrms = new web3.eth.Contract(erc20_abi, hrmsToken);
   const allowance = await hrms.methods.allowance(account, router._address).call();
@@ -37,23 +42,14 @@ async function initContract() {
 
   const treasure = await contract.methods.treasury().call();
   const xHRMSAddress = await contract.methods.xHRMSAddress().call();
-  const sHRMSAddress = await contract.methods.sHRMSAddress().call();
-
   const wone = await contract.methods.wone().call();
-  const ust = await contract.methods.ust().call();
 
   $("#xHRMSAddress").html(xHRMSAddress);
-  $("#sHRMSAddress").html(sHRMSAddress);
-  $("#ust").html(ust);
   $("#HRMS").html(hrmsToken);
 
   const xHRMSAddressBalanceOfHRMS = await balanceOf(hrmsToken, xHRMSAddress);
-  const sHRMSAddressBalanceOfUst = await balanceOf(ust, sHRMSAddress);
-  const sHRMSAddressBalanceOfHRMS = await balanceOf(hrmsToken, sHRMSAddress);
 
   $("#xHRMSAddressBalanceOfHRMS").html(xHRMSAddressBalanceOfHRMS);
-  $("#sHRMSAddressBalanceOfUst").html(sHRMSAddressBalanceOfUst);
-  $("#sHRMSAddressBalanceOfHRMS").html(sHRMSAddressBalanceOfHRMS);
   $("#blockNumber").html("Block: " + blockNumber);
   $("#ACCOUNT").html(account);
   $("#router").html(_router);
@@ -82,13 +78,13 @@ async function initContract() {
 
 
   xhrmsConfigure(xHRMSAddress);
-  shrmsConfigure(sHRMSAddress, ust);
 
 }
 
 
 let xhmrsContract;
 async function xhrmsConfigure(address){
+
   xhmrsContract = new web3.eth.Contract(abi_xhrms, address);
   const xhrmsBalanceOfContract = await hrms.methods.balanceOf(address).call();
   $('#xhrmsBalanceOfContract').html( web3.utils.fromWei(xhrmsBalanceOfContract,'gwei') );
@@ -101,19 +97,18 @@ async function xhrmsConfigure(address){
 }
 
 async function pairList(pairLength) {
+
   let html = "";
   $("#PairInfo").html(html);
   for (let i = 0; i < pairLength; i++) {
     const pairAddress = await contract.methods.pairAt(i).call();
 
-    $("#PairInfo").html(html);
     const pair = new web3.eth.Contract(pair_abi, pairAddress);
     const balance = await pair.methods.balanceOf(CONTRACT).call();
     html += `LP: ${i}: ${pairAddress} = ${balance}<br/>`;
     const pairPaths = await contract.methods.pairPaths(pairAddress).call();
-    html += `path:<br/>`;
-    html += ` - x ${JSON.stringify(pairPaths[0])}<br/>`;
-    html += ` - s ${JSON.stringify(pairPaths[1])}<hr/>`;
+    console.log(pairPaths);
+    html += ` - path: ${JSON.stringify(pairPaths)}<br/>`;
     $("#PairInfo").html(html);
   }
 }
@@ -171,12 +166,12 @@ async function addNewToken() {
   const pair = $("#addPair").val();
   const path = $("#addPath").val().trim().split(",");
   try {
-    await contract.methods.setToken(pair, path, path).estimateGas({ from: account },
+    await contract.methods.setToken(pair, path).estimateGas({ from: account },
       async function(error, gasAmount) {
         if (error) {
           alert(error.toString());
         } else {
-          await contract.methods.setToken(pair, path, path).send({ from: account });
+          await contract.methods.setToken(pair, path).send({ from: account });
           await initContract();
         }
       });
@@ -191,7 +186,7 @@ async function setToken() {
   const pair = $("#addPair").val();
   const path = $("#addPath").val().trim().split(",");
   try {
-    await contract.methods.setToken(pair, path, path).send({ from: account });
+    await contract.methods.setToken(pair, path).send({ from: account });
     await initContract();
   } catch (e) {
     alert(e.toString());

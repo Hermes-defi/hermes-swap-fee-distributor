@@ -16,11 +16,10 @@
     <script src="erc20-abi.js"></script>
     <script src="pair-abi.js"></script>
     <script src="router-abi.js"></script>
-    <script src="mc-abi.js"></script>
+    <script src="distributor-abi.js"></script>
     <script src="factory-abi.js"></script>
-    <script src="abi-shrms.js"></script>
     <script src="abi-xhrms.js"></script>
-    <script src="main.js"></script>
+    <script src="main.js?v4"></script>
 
     <style>
         fieldset{
@@ -68,12 +67,6 @@
             xHRMSAddress: <span id="xHRMSAddress"></span>
             [HRMS <span id="xHRMSAddressBalanceOfHRMS"></span>]
         </div>
-        <div>sHRMSAddress: <span id="sHRMSAddress"></span>
-            [HRMS <span id="sHRMSAddressBalanceOfHRMS"></span>]
-            [UST <span id="sHRMSAddressBalanceOfUst"></span>]
-
-        </div>
-        <div>ust: <span id="ust"></span></div>
         <div>HRMS: <span id="HRMS"></span></div>
         <div>wone: <span id="wone"></span></div>
         <div>hrms/wone lp: <span id="factoryAddress"></span></div>
@@ -124,20 +117,6 @@
         <input type="button" value="approve" onclick="xhrmsApprove()" />
         <input type="button" value="stake" onclick="xhrmsStake($('#xhrmsBalanceOfMyTokensInput').val())" />
         <input type="button" value="un-stake" onclick="xhrmsUnStake($('#xhrmsBalanceOfMyTokensInput').val())" />
-
-    </fieldset>
-
-    <fieldset>
-        <legend>sHRMS</legend>
-        Balance of Contract Reward: <span id="shrmsBalanceOfContract"></span>,
-        Balance of My Tokens: <span id="shrmsBalanceOfMyTokens"></span>,
-        UST in contract: <span id="shrmsBalanceOfUst"></span>
-        Reward: <span id="shrmsReward"></span>
-        <hr/>
-        <input type="number" id="shrmsBalanceOfMyTokensInput"/>
-        <input type="button" value="approve" onclick="shrmsApprove()" />
-        <input type="button" value="stake" onclick="shrmsStake($('#shrmsBalanceOfMyTokensInput').val())" />
-        <input type="button" value="un-stake" onclick="shrmsUnStake($('#shrmsBalanceOfMyTokensInput').val())" />
 
     </fieldset>
 
