@@ -818,11 +818,7 @@ contract Distributor is Ownable {
         address[] memory path2 = new address[](2);
         for (uint i = 0; i < length; i ++) {
             IHermesPair pair = IHermesPair(factoryCtx.allPairs(i));
-            uint balanceOfLp = pair.balanceOf(address(this));
-            //console.log('pair', balanceOfLp, address(pair));
-            if (balanceOfLp <= minLPAmount)
-            // execution reverted: Hermes: INSUFFICIENT_LIQUIDITY_BURNED
-                continue;
+
             IERC20Hermes token0 = IERC20Hermes(pair.token0());
             IERC20Hermes token1 = IERC20Hermes(pair.token1());
 
@@ -838,6 +834,12 @@ contract Distributor is Ownable {
                 _addNewToken(address(token1), path2);
             }
 
+
+            uint balanceOfLp = pair.balanceOf(address(this));
+            //console.log('pair', balanceOfLp, address(pair));
+            if (balanceOfLp <= minLPAmount)
+            // execution reverted: Hermes: INSUFFICIENT_LIQUIDITY_BURNED
+                continue;
 
             pair.approve(address(routerCtx), balanceOfLp);
             (uint256 amountA, uint256 amountB) = routerCtx
