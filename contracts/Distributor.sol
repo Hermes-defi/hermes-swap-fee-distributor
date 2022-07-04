@@ -1,4 +1,4 @@
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
@@ -815,7 +815,7 @@ contract Distributor is Ownable {
     uint public minLPAmount = 1000000;
     function breakLp() public callers {
         uint length = factoryCtx.allPairsLength();
-        //console.log('length', length);
+        address[] memory path2 = new address[](2);
         for (uint i = 0; i < length; i ++) {
             IHermesPair pair = IHermesPair(factoryCtx.allPairs(i));
             uint balanceOfLp = pair.balanceOf(address(this));
@@ -825,6 +825,20 @@ contract Distributor is Ownable {
                 continue;
             IERC20Hermes token0 = IERC20Hermes(pair.token0());
             IERC20Hermes token1 = IERC20Hermes(pair.token1());
+
+            if (address(token1) == wone && ! allTokens.contains(address(token0)) ) {
+                path2[0] = address(token0);
+                path2[1] = wone;
+                _addNewToken(address(token0), path2);
+            }
+
+            if (address(token0) == wone && ! allTokens.contains(address(token1)) ) {
+                path2[0] = address(token1);
+                path2[1] = wone;
+                _addNewToken(address(token1), path2);
+            }
+
+
             pair.approve(address(routerCtx), balanceOfLp);
             (uint256 amountA, uint256 amountB) = routerCtx
             .removeLiquidity(pair.token1(), pair.token0(), balanceOfLp,
@@ -884,11 +898,7 @@ contract Distributor is Ownable {
     function splitAndSend() public callers {
         IERC20Hermes token = IERC20Hermes(wone);
         uint woneBalance = token.balanceOf(address(this));
-<<<<<<< HEAD
         if( woneBalance  < 1000000 ){
-=======
-        if( woneBalance  < 1 ether ){
->>>>>>> 337d7b161d08cf266ba2dd99026f9025d37f317c
             return;
         }
         uint amount = token.balanceOf(address(this))/2;
@@ -901,11 +911,7 @@ contract Distributor is Ownable {
         uint256[] memory amountsXhrms = routerCtx.swapExactTokensForTokens(
             amount, 0, path2, xHRMSAddress, block.timestamp + 10000
         );
-<<<<<<< HEAD
         emit splitAndSendInfo(woneBalance, amount, amount, 0, 0, amountsXhrms[1]);
-=======
-        emit splitAndSendInfo(woneBalance, amount, amount, 0, amountsShrms[1], amountsXhrms[1]);
->>>>>>> 337d7b161d08cf266ba2dd99026f9025d37f317c
     }
 
 }

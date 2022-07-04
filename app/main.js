@@ -1,4 +1,4 @@
-const CONTRACT = "0x46c03CfF14A6796c9D72277DE18a70A0c9fa7BB1";
+const CONTRACT = "0x669C381CFCE6473Ceb4C8a95e2A9a3584297396C";
 const _factory = "0xfE5e54A8E28534fFfe89b9cfDDfd18d3a90B42cA";
 let web3, account, contract, router, factory, hrms, pairCtx;
 
@@ -74,7 +74,7 @@ async function initContract() {
   $("#lpBalanceOfCtx").html(web3.utils.fromWei(lpBalanceOfCtx));
 
 
-  // pairList(pairLength);
+  pairList(pairLength);
 
 
   xhrmsConfigure(xHRMSAddress);
@@ -103,14 +103,12 @@ async function pairList(pairLength) {
   for (let i = 0; i < pairLength; i++) {
     const pairAddress = await contract.methods.pairAt(i).call();
 
-    $("#PairInfo").html(html);
     const pair = new web3.eth.Contract(pair_abi, pairAddress);
     const balance = await pair.methods.balanceOf(CONTRACT).call();
     html += `LP: ${i}: ${pairAddress} = ${balance}<br/>`;
     const pairPaths = await contract.methods.pairPaths(pairAddress).call();
-    html += `path:<br/>`;
-    html += ` - x ${JSON.stringify(pairPaths[0])}<br/>`;
-    html += ` - s ${JSON.stringify(pairPaths[1])}<hr/>`;
+    console.log(pairPaths);
+    html += ` - path: ${JSON.stringify(pairPaths)}<br/>`;
     $("#PairInfo").html(html);
   }
 }
@@ -168,12 +166,12 @@ async function addNewToken() {
   const pair = $("#addPair").val();
   const path = $("#addPath").val().trim().split(",");
   try {
-    await contract.methods.setToken(pair, path, path).estimateGas({ from: account },
+    await contract.methods.setToken(pair, path).estimateGas({ from: account },
       async function(error, gasAmount) {
         if (error) {
           alert(error.toString());
         } else {
-          await contract.methods.setToken(pair, path, path).send({ from: account });
+          await contract.methods.setToken(pair, path).send({ from: account });
           await initContract();
         }
       });
@@ -188,7 +186,7 @@ async function setToken() {
   const pair = $("#addPair").val();
   const path = $("#addPath").val().trim().split(",");
   try {
-    await contract.methods.setToken(pair, path, path).send({ from: account });
+    await contract.methods.setToken(pair, path).send({ from: account });
     await initContract();
   } catch (e) {
     alert(e.toString());
