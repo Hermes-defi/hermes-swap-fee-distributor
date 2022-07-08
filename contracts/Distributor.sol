@@ -744,18 +744,14 @@ contract Distributor is Ownable {
     event onConvertTo(address convertFrom, address[] path, uint256[] amounts);
     event splitAndSendInfo(uint woneBalance, uint treasureBalance, uint xHRMSBalance, uint sHRMSBalance, uint ust, uint hrms);
 
-    constructor(
-        address _router,
-        address _treasury,
-        address _xHRMSAddress,
-        address _HRMS)
+    constructor()
     {
-        router = _router;
-        treasury = _treasury;
-        xHRMSAddress = _xHRMSAddress;
-        HRMS = _HRMS;
+        router = address(0x0A34fE479d2442fB51333ac373dD2CBF02B6D949);
+        treasury = address(0x79dE631fFb7291Acdb50d2717AE32D44D5D00732);
+        xHRMSAddress = address(0x28A4E128f823b1b3168f82F64Ea768569a25a37F);
+        HRMS = address(0xBA4476A302f5Bc1dc4053Cf79106dc43455904a3);
 
-        routerCtx = IHermesRouter02(_router);
+        routerCtx = IHermesRouter02(router);
         factoryCtx = IHermesFactory(routerCtx.factory());
         factoryCtx.allPairsLength();
 
@@ -821,19 +817,6 @@ contract Distributor is Ownable {
 
             IERC20Hermes token0 = IERC20Hermes(pair.token0());
             IERC20Hermes token1 = IERC20Hermes(pair.token1());
-
-            if (address(token1) == wone && ! allTokens.contains(address(token0)) ) {
-                path2[0] = address(token0);
-                path2[1] = wone;
-                _addNewToken(address(token0), path2);
-            }
-
-            if (address(token0) == wone && ! allTokens.contains(address(token1)) ) {
-                path2[0] = address(token1);
-                path2[1] = wone;
-                _addNewToken(address(token1), path2);
-            }
-
 
             uint balanceOfLp = pair.balanceOf(address(this));
             //console.log('pair', balanceOfLp, address(pair));
@@ -915,5 +898,7 @@ contract Distributor is Ownable {
         );
         emit splitAndSendInfo(woneBalance, amount, amount, 0, 0, amountsXhrms[1]);
     }
+
+
 
 }
